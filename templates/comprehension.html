@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='comprehension_summary.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>Comprehension Practice</title>
+</head>
+<body>
+    <header class="header">
+        <div class="logo" id="logo"></div>
+
+        <div class="profile">
+            <div class="user-profile">
+                <div class="profile-avatar">👤</div>
+                <div id="username"></div>
+                <i class="arrow fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="logout-settings">
+                <div class="logout" id="logoutButton">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Logout</span>
+                </div>
+                <div class="settings">Settings</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <section class="passage-section">
+            <h3 class="passage-title">Comprehension Passage</h3>
+            <pre>{{ text }}</pre>
+        </section>
+
+        <section class="chat-section">
+            <div class="chat-header">
+                <h3 class="chat-title">Tutor Chat Area</h3>
+                <p class="chat-subtitle">Chat with your tutor here feel free to ask anything</p>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">
+                    <p>Start a conversation about the passage!</p>
+                    <p style="font-size: 14px; margin-top: 8px;">To communicate with the Tutor start typing at the input section below !!! </p>
+                </div>
+            </div>
+            
+            <div class="typing-indicator" id="typingIndicator">
+                <span>Tutor is responding</span>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <div class="chat-input-section">
+                <div class="input-container">
+                    <textarea 
+                        class="chat-input" 
+                        id="chatInput" 
+                        placeholder="Start typing to communicate with the Tutor"
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module" src="static/js/display.js"></script>
+    <script>
+        
+    </script>
+</body>
+</html>

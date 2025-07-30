@@ -1,0 +1,114 @@
+@import url("comprehension_summary.css");
+
+#progress-bar-wrapper {
+    width: 100%; 
+    background: #eee; 
+    border-radius: 10px; 
+    margin: 5px auto; 
+    height: 10px;
+}
+
+#progress-bar {
+    height: 100%; 
+    width: 0%; background: #4caf50; 
+    border-radius: 10px; 
+    transition: width 0.3s ease;
+}
+
+#quiz-container {
+    color: #1f2937;
+    padding: 4px 14px;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 40vh;
+  }
+
+#question-container {
+  font-size: 15px;
+  margin-bottom: 15px;
+  padding: 0 10px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+#answers-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  color: #1f2937;
+  padding: 0 20px;
+}
+
+#answers-container button {
+  background-color: #f1f1f1;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 0.4em 0.6em;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+#answers-container button:hover {
+  background-color: #e0ecff;
+  border-color: #4a90e2;
+}
+
+#submit-btn,
+#next-btn {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 0.6em;
+  font-size: 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s;
+}
+
+#submit-btn:hover,
+#next-btn:hover {
+  background-color: #357ab7;
+}
+
+#result-container {
+  margin-top: 15px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+@media (max-width: 768) {
+  .quiz-container {
+    height: calc(50vh-108px);
+  } 
+
+  #quiz-container {
+    color: #1f2937;
+    padding: 4px 14px;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 40vh;
+  }
+
+  #question-container {
+    font-size: 15px;
+    margin-bottom: 15px;
+    padding: 0 10px;
+    font-weight: bold;
+    color: #1f2937;
+  }
+
+  #answers-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    color: #1f2937;
+    padding: 0 20px;
+  }
+
+}
