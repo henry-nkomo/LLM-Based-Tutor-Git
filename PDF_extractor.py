@@ -16,7 +16,7 @@ google_api_key = os.getenv('GOOGLE_API_KEY')
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3, google_api_key=google_api_key)
 
 # Folder with PDF question papers
-folder_path = r"C:\Users\Henry\Documents\MSC project\LLM-Based Tutor\past papers"
+folder_path = r"C:\Users\****\Documents\MSC project\LLM-Based Tutor\past papers"
 output_path = "extracted_papers.json"
 
 # Make sure the file exists (start with empty list)
