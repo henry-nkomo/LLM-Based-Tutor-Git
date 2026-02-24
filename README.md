@@ -1,9 +1,8 @@
 # LLM-Based English Comprehension Tutor Tool For Grade 12 Learners 
 
 ## Contents
-- [project-files](#)
-- [project-files](#project-files)
-- [project-files](#project-files)
+- [File Organisation](#file-organisation)
+- [Installation](#installation)
 
 ## File Organisation
 Folders: 
