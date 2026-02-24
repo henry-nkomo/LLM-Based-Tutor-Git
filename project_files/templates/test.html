@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='options.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <title>Study Dashboard</title>
     <style>
         * {
     margin: 0;
@@ -35,59 +34,6 @@ body {
     align-items: center;
 }
 
-.logout-button{
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: 400;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-    min-width: 0.5rem;
-    /*position: relative;*/
-    overflow: hidden;
-}
-
-.logout-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.logout-button:hover::before {
-    left: 100%;
-}
-
-.logout-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-}
-
-.logout-button:nth-child(2) {
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-    box-shadow: 0 8px 20px rgba(66, 153, 225, 0.3);
-}
-
-.logout-button:nth-child(2):hover {
-    box-shadow: 0 12px 30px rgba(66, 153, 225, 0.4);
-}
-
-.logout-button:nth-child(3) {
-    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-    box-shadow: 0 8px 20px rgba(72, 187, 120, 0.3);
-}
-
-.logout-button:nth-child(3):hover {
-    box-shadow: 0 12px 30px rgba(72, 187, 120, 0.4);
-}
 
 .logo {
     background: url("../static/img/logo.png");
@@ -96,23 +42,6 @@ body {
     width: 80px;
     border-radius: 6px;
     cursor: pointer;
-}
-
-.nav-menu {
-    display: flex;
-    gap: 30px;
-    list-style: none;
-}
-
-.nav-menu li {
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-}
-
-.nav-menu li:hover {
-    background-color: #f7fafc;
 }
 
 .profile {
@@ -200,7 +129,6 @@ body {
     transform: rotate(180deg);
 }
 
-
 .welcome-dialogue {
     display: flex;
     flex-direction: column;
@@ -273,20 +201,17 @@ body {
 
 .welcome-section {
     text-align: center;
-    margin-bottom: 60px;
 }
 
 .welcome-title {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: #2d3748;
-    margin-bottom: 10px;
 }
 
 .welcome-subtitle {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: #718096;
-    margin-bottom: 30px;
 }
 
 .stats-container {
@@ -402,12 +327,12 @@ body {
 }
 
 @media (max-width: 768px) {
-    .nav-menu {
-        display: none;
-    }
-    
     .welcome-title {
-        font-size: 2rem;
+        font-size: 1rem;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.8rem;
     }
 
     .chat-area {
@@ -449,20 +374,18 @@ body {
     }
 }
     </style>
+    <title>Study Dashboard</title>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
             <div class="logo"></div>
-            <button class="logout-button" id="logoutButton">Logout</button>
-            <nav>
-                <ul class="nav-menu">
-                    <li>Dashboard</li>
-                    <li>Courses</li>
-                    <li>Progress</li>
-                    <li>Settings</li>
-                </ul>
-            </nav>
+
+            <section class="welcome-section">
+                <div class="welcome-title" id="welcome-title"></div>
+                <p class="welcome-subtitle">Ready to continue your learning journey?</p>
+            </section>
+
             <div class="profile">
                 <div class="user-profile">
                     <div class="profile-avatar">👤</div>
@@ -477,7 +400,6 @@ body {
                     <div class="settings">Settings</div>
                 </div>
             </div>
-            
         </div>
     </header>
 
@@ -490,27 +412,22 @@ body {
     </section>
 
     <main class="main-content">
-        <section class="welcome-section">
-            <h1 class="welcome-title">Welcome back, John!</h1>
-            <p class="welcome-subtitle">Ready to continue your learning journey?</p>
-        </section>
-
         <section class="stats-container">
             <div class="stat-card">
-                <div class="stat-number">24</div>
+                <div class="stat-number" id="lessons"></div>
                 <div class="stat-label">Lessons Completed</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">8</div>
-                <div class="stat-label">Current Streak</div>
+                <div class="stat-number" id="compre"></div>
+                <div class="stat-label">Passage Questioning</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">92%</div>
-                <div class="stat-label">Average Score</div>
+                <div class="stat-number" id="summa"></div>
+                <div class="stat-label">Summary Writing</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">4.2</div>
-                <div class="stat-label">Hours Today</div>
+                <div class="stat-number" id="vocab">0%</div>
+                <div class="stat-label">Vocabulary Practice</div>
             </div>
         </section>
 
@@ -518,7 +435,7 @@ body {
             <h2 class="study-title">Select a Study Option</h2>
             <div class="options-container">
                 <button class="study-button" id="comprehension-study">
-                    Comprehension Practice
+                    Passage Questioning
                 </button>
                 <button class="study-button" id="summary-study">
                     Summary Writing
@@ -530,9 +447,184 @@ body {
         </section>
     </main>
 
-    <script>
-        name = 'Henry';
-        document.getElementById('username').textContent = name;
+    <script type="module" src="/static/js/options.js">
+        // Handle session expiry
+async function handleSessionExpiry() {
+    
+    // Kill session on backend should have used get verify session backend first
+    try {
+        await fetch('/logout', {
+            method: 'POST'
+        });
+    } catch (error) {
+        console.log('Error killing session on backend:', error);
+    }
+    
+    // Clear any frontend storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Notify user and redirect
+    alert('Your session has expired due to inactivity. Please log in again.');
+    window.location.href = '/'; // Redirect to login page
+}
+
+async function getSessionData() {
+    try {
+        const response = await fetch('/check-session');
+        const result = await response.json();
+        
+        if (result.authenticated) {
+            document.getElementById('username').textContent = result.username;
+            document.getElementById('lessons').textContent = `${result.l_completed}`;
+            document.getElementById('compre').textContent = `${result.c_mark}%`;
+            document.getElementById('summa').textContent = `${result.s_mark}%`;
+            document.getElementById('welcome-title').textContent = `Welcome back, ${result.username}`;
+        }
+    } catch (error) {
+        console.log('Error checking session:', error);
+        return false;
+    }
+}
+
+document.getElementById('logoutButton').addEventListener('click', async function () {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                alert('Logged out successfully');
+                window.location.href = '/';
+            } else {
+                alert('Logout failed');
+            }
+        } catch (error) {
+            alert('Error logging out');
+        }
+});
+
+
+/////////////////////////////// Fill the chat area on page load///////////////////////////////////////////
+function fillChatArea(previous_dialogue) {
+    console.log('Previous dialogue length:', previous_dialogue);
+    if(previous_dialogue.length <= 2 ) { return}
+
+    const messagesDiv = document.querySelector('.chat-area');
+
+    //empty chat area
+    messagesDiv.innerHTML = "";
+    previous_dialogue.forEach(message => {
+        const [role, content] = Object.entries(message)[0];
+        const label = role === 'HumanMessage' ? 'You': 'Tutor';
+
+        messagesDiv.innerHTML += `<div class="message bot-message"><strong>${label}</strong> ${content}</div>`;
+    })
+}
+
+
+//when enter is pressed take action
+document.getElementById('response-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        userDialogue();
+    }
+});
+
+///////////////////////////////Send messsages ////////////////////////////////////////////////////
+//send initial welcom message
+async function welcomeUser() {
+    // Append user message to body
+    const messagesDiv = document.querySelector('.chat-area');
+
+    try {
+        const sum_payload = { 
+            message: "Initiate a conversation, send ititial message"
+        };
+
+        const initiateChat = await fetch('/dashboard_dialogue', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sum_payload),
+        });
+
+        const data = await initiateChat.json();
+        console.log('Response data:', data);
+
+        // Append bot response to body
+        messagesDiv.innerHTML += `<div class="message bot-message"><strong>Tutor:</strong> ${data.message}</div>`;
+        fillChatArea(welcomeUserResponse.dialogue);
+
+        // Scroll to the bottom of the messages
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    } catch (error) {
+        console.log('could not initiate dialogue');
+        return null
+    }
+}
+
+//user welcome dialogue
+async function userDialogue() {
+    const message = document.getElementById('response-input').value;
+    if (!message.trim()) return; // Prevent sending empty messages
+
+    // Append user message to body
+    const messagesDiv = document.querySelector('.chat-area');
+    messagesDiv.innerHTML += `<div class="message user-message"><strong>You:</strong> ${message}</div>`;
+
+    // Clear input field
+    document.getElementById('response-input').value = '';
+
+    try {
+        const sum_payload = { 
+            message: message
+        };
+
+        const welcomeUserDialogue = await fetch('/dashboard_dialogue', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(sum_payload),
+        });
+
+        const data = await welcomeUserDialogue.json();
+        console.log('Response data:', data);
+
+        // Append bot response to body
+        messagesDiv.innerHTML += `<div class="message bot-message"><strong>Tutor:</strong>${data.message}</div>`;
+        // Scroll to the bottom of the messages
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+    } catch (error) {
+        console.log('could not initiate dialogue');
+        return null
+    }
+}
+
+document.getElementById('responseSubmitBtn').addEventListener('click', userDialogue);
+
+/////////////////Upon clicking practice sections render the relevant pages/////////////////
+document.getElementById('comprehension-study').addEventListener('click', function getComprehension() {
+    window.location.href = '/study'
+})
+
+document.getElementById('summary-study').addEventListener('click', function getComprehension() {
+    window.location.href = '/get-summary'
+})
+
+document.getElementById('vocabulary-study').addEventListener('click', function getComprehension() {
+    window.location.href = '/get-vocabulary'
+})
+
+// Initialize everything on page load
+document.addEventListener('DOMContentLoaded', function() {
+    getSessionData();
+    welcomeUser();
+});
     </script>
 </body>
 </html>

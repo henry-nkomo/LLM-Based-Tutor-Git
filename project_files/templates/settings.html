@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
+    <title>Settings</title>
+</head>
+<body>
+    <header class="header">
+        <div class="logo" id="logo"></div>
+
+        <div class="profile">
+            <div class="user-profile">
+                <div class="profile-avatar">👤</div>
+                <div id="second_username"></div>
+                <i class="arrow fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="logout-settings">
+                <div class="logout" id="logoutButton">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+        </div>
+    </header><br><br><br><br>
+
+    <div class="container">
+        <div class="container-header">
+            <h1>Account Settings</h1>
+            <p>Manage your profile information and account preferences</p>
+        </div>
+
+        <div class="settings-grid">
+            <!-- Profile Information -->
+            <div class="settings-card">
+                <h2 class="card-title">
+                    <div class="profile-avatar card-icon">👤</div>
+                    Profile Information
+                </h2>
+                
+                <div class="profile-section">
+                    <div class="profile-card" id="profile-card"></div>
+                    <div class="profile-info">
+                        <h2 id="username"></h2>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="name-input"  readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="email-input"  readonly>
+                    <small id="email-error" style="color: red; display: none;">Invalid email address</small>
+                    <small id="edit-error"></small>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-primary" onclick="toggleEdit()">Edit Profile Data</button>
+            </div>
+            
+            <!-- Account Overview -->
+            <div class="settings-card">
+                <h2 class="card-title">
+                    <div class="profile-avatar card-icon">👁️</div>
+                    Account Overview
+                </h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="lessons"></div>
+                        <div class="stat-label">Lessons Completed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="compre"></div>
+                        <div class="stat-label">Passage Questioning</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="summa"></div>
+                        <div class="stat-label">Summary Writing</div>
+                    </div>
+                    <!---<div class="stat-item">
+                        <div class="stat-value"></div>
+                        <div class="stat-label">Vocabulary</div>
+                    </div>--->
+                </div>
+                
+                <!-- Delete Account Button -->
+                <div style="margin-top: 32px;">
+                    <button class="btn btn-danger" onclick="openDeleteModal()">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Account Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <h2 class="modal-title">Delete Account</h2>
+                <p class="modal-subtitle">This action cannot be undone</p>
+            </div>
+            
+            <div class="modal-content">
+                <div class="danger-warning">
+                    <div class="danger-warning-header">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                        Permanent Account Deletion
+                    </div>
+                    <p>Once you delete your account, there is no going back. This action will permanently delete your profile, learning progress, achievements, and all associated data. Please be certain before proceeding.</p>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Data Retention</div>
+                        <div class="info-value">All data will be permanently deleted</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Recovery Period</div>
+                        <div class="info-value">No recovery period - immediate deletion</div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-cancel" onclick="closeDeleteModal()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" onclick="confirmDelete()">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

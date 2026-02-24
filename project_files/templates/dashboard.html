@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='options.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.5.0/dist/Recharts.js"></script>
     <title>Study Dashboard</title>
 </head>
 <body>
@@ -28,7 +29,7 @@
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         <span>Logout</span>
                     </div>
-                    <div class="settings">Settings</div>
+                    <div class="settings" id="settings">Settings</div>
                 </div>
             </div>
         </div>
@@ -43,41 +44,40 @@
     </section>
 
     <main class="main-content">
-        <section class="stats-container">
-            <div class="stat-card">
-                <div class="stat-number" id="lessons"></div>
-                <div class="stat-label">Lessons Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="compre"></div>
-                <div class="stat-label">Passage Questioning</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="summa"></div>
-                <div class="stat-label">Summary Writing</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="vocab">0%</div>
-                <div class="stat-label">Vocabulary Practice</div>
-            </div>
-        </section>
-
         <section class="study-section">
-            <h2 class="study-title">Select a Study Option</h2>
+            <h2 class="study-title">Ready to Practice?</h2>
             <div class="options-container">
-                <button class="study-button" id="comprehension-study">
-                    Passage Questioning
+                <button class="study-button" id="study-btn">
+                    Start Study Session
                 </button>
-                <button class="study-button" id="summary-study">
-                    Summary Writing
-                </button>
-                <button class="study-button" id="vocabulary-study">
-                    Vocabulary Exercise
-                </button>
+            </div>
+        </section>   
+
+        <!-- Knowledge State Radar Chart Section -->
+        <section class="knowledge-state-section">
+            <h2 class="knowledge-state-title">Your Skill Profile</h2>
+            <div class="radar-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <span>Proficient (≥70%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <span>Developing (50-69%)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ef4444;"></div>
+                    <span>Needs Work (&lt;50%)</span>
+                </div>
             </div>
         </section>
     </main>
 
-    <script type="module" src="/static/js/options.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script type="module" src="/static/js/dashboard.js"></script>
+
 </body>
 </html>

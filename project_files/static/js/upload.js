@@ -77,7 +77,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const result = await response.json();
         
         if (response.ok) {
-            alert(`Welcome ${result.username}! Login successful.`);
             // Redirect to dashboard 
             window.location.href = '/dashboard'; 
         } else {
