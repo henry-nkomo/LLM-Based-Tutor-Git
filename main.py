@@ -206,7 +206,7 @@ def dashboard_dialogue():
         data = request.get_json()
         user_message = data.get('message', '')  # Default to empty string
 
-        default_input_response = "A message sent to the tutor has been flagged unsfafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
+        default_input_response = "A message sent to the tutor has been flagged unsafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
         default_output_response = "A message from the tutor been flagged as unsafe and cannot be processed. Please resend you previous message to continue the tutoring session."
 
         client = OpenAI()
