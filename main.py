@@ -263,7 +263,10 @@ def tutoring():
     try:
         data = request.get_json()
         user_message = data.get('message')
-        temp_response = "This is a temporary response to test the tutoring endpoint. The user's message was: " + user_message
+
+        default_input_response = "A message sent to the tutor has been flagged unsfafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
+        default_output_response = "A message from the tutor been flagged as unsafe and cannot be processed. Please resend you previous message to continue the tutoring session."
+
 
         client = OpenAI()
 
@@ -281,7 +284,7 @@ def tutoring():
                     # Get the score for this category
                     score = getattr(input_moderated_response.category_scores, category.replace('/', '_'))
                     print(f"  - {category}: {score:.4f}")
-            return jsonify({"message": response}), 200
+            return jsonify({"message": default_input_response}), 200
 
 
         #study_meterial = retrieveData()
@@ -342,7 +345,7 @@ def tutoring():
                     print(f"  - {category}: {score:.4f}")"""
             return jsonify({"message": default_output_response}), 200
             
-        return jsonify({"message": temp_response}), 200
+        return jsonify({"message": response}), 200
     
     except Exception as e:
         print(f"FULL ERROR: {e}")
