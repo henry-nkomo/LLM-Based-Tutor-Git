@@ -205,7 +205,22 @@ def dashboard_dialogue():
     try:
         data = request.get_json()
         user_message = data.get('message', '')  # Default to empty string
-        
+
+        default_input_response = "A message sent to the tutor has been flagged unsfafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
+        default_output_response = "A message from the tutor been flagged as unsafe and cannot be processed. Please resend you previous message to continue the tutoring session."
+
+        client = OpenAI()
+
+        input_moderation = client.moderations.create(
+            model="omni-moderation-latest",
+            input= user_message,
+        )
+
+        input_moderated_response = input_moderation.results[0]
+
+        if input_moderated_response.flagged:
+            return jsonify({"message": default_input_response}), 200
+
         #Initialize dashboard_history if it doesn't exist
         if 'dashboard_history' not in session:
             session['dashboard_history'] = []
@@ -227,6 +242,16 @@ def dashboard_dialogue():
 
         print("*****************///////-----------")
         print(result, "-------**/*//*****************************dashboard result")
+
+        output_moderation = client.moderations.create(
+            model="omni-moderation-latest",
+            input=response,
+        )
+
+        output_moderated_response = output_moderation.results[0]
+
+        if output_moderated_response.flagged:
+            return jsonify({"message": default_output_response}), 200
 
         response = result["message"]
         
@@ -278,12 +303,6 @@ def tutoring():
         input_moderated_response = input_moderation.results[0]
 
         if input_moderated_response.flagged:
-            #uncomment for debugging
-            for category, is_flagged in input_moderated_response.categories.model_dump().items():
-                if is_flagged:
-                    # Get the score for this category
-                    score = getattr(input_moderated_response.category_scores, category.replace('/', '_'))
-                    print(f"  - {category}: {score:.4f}")
             return jsonify({"message": default_input_response}), 200
 
 
