@@ -27,16 +27,14 @@ skill_components = retrieveData()
 progress = retrieveData()
 
 load_dotenv()
-O_api_key = os.getenv("OPENAI_API_KEY")
-
-print(O_api_key)
+"""O_api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize the LLM
 llm = ChatOpenAI(
     model="gpt-5-2025-08-07",  # you can replace with "gpt-4" or others
     api_key=O_api_key,
     temperature=1
-)
+)"""
 
 """google_gen_ai = os.getenv('GOOGLE_API_KEY')
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite", api_key=google_gen_ai)
@@ -45,11 +43,11 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite", api_key=google_gen_a
 A_api_key = os.getenv("ANTHROPIC_API_KEY")
 
 # Initialize Claude (Sonnet in this case)
-"""llm = ChatAnthropic(
+llm = ChatAnthropic(
     model="claude-3-haiku-20240307",  # haiku / sonnet / opus are available
     temperature=0,
     api_key=A_api_key
-)"""
+)
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=768)
 
@@ -102,32 +100,42 @@ def ocherstrator_edge(state: mainState) -> mainState:
 def preamble_node(state: mainState) -> mainState:
     """This function serves to introduce the student when the tutoring session which is just starting"""
     print("------------preamble node")
+
     try:
         template = """
-            You are an expert Tutor who possesses people skills. 
+                You are an English comprehension tutor.
 
-            context:
-              Student's name: {username}
-              Student's message: {user_message}
-              Chat history: {history}
+                context:
+                    Student's name: {username}
+                    Student's message: {user_message}
+                    Chat history: {history}
 
-            instructions:
-              1. You are about to begin an English comprehension tutoring session with the student what they shoud focus on is 
-                 determined by the system just focus on greeting them asking if they are ready for the tutoring session.
-              2. Look at the chat history:
-                 - If empty or very short (1-2 exchanges), greet the student warmly and ask how they're feeling about starting the session.
-                 - Continue building rapport and don't rush to start the exercises.
-              3. Continue the dialogue and assess if the student is ready for a tutoring session, your approach is of someone who wants to start the tutoring session.
-              4. IMPORTANT: Only mark the student as "ready" if they EXPLICITLY indicate readiness with phrases like:
-                 - "I'm ready"
-                 - "Let's start"
-                 - "Yes, I want to begin"
-                 - "Let's do this"
-                 - Similar clear affirmations
-              5. Your responses should be short and precise.
-              6. If the student is ready mark current state as "question" an tell them you will send a question with instructions shortly, otherwise "no_question".
-              7. Respond ONLY in JSON format {{"current_state": "<question_status>", "ai_response": "<your message>"}}
-        """
+                instructions:    
+
+                1: Read the chat history carefully:
+                    - Is the history empty? → This is the first message, greet the student.
+                    - Does the history show a greeting already happened? → DO NOT greet again. 
+                    Respond to what the student just said.
+
+                2: Determine current_state:
+                    - Set current_state to "question" if the student's CURRENT message contains 
+                    ANY of these signals: "ready", "let's start", "let's go", "begin", "yes", 
+                    "sure", "ok", "okay", "I am ready", "am ready", "start"
+                    - Set current_state to "no_question" for everything else.
+
+                3: Compose your response:
+                    - If current_state is "question": tell the student you will send a question shortly.
+                    - If current_state is "no_question" AND history is empty: greet and ask if they are ready.
+                    - If current_state is "no_question" AND history is NOT empty: respond naturally 
+                    to what they said, and ask if they are ready to begin.
+                    - NEVER repeat a greeting if the history shows one already happened.
+                    - Keep response to 1-2 sentences.
+
+                NOTE: current_state MUST be exactly "question" or "no_question". Nothing else.
+
+                Respond ONLY as valid JSON, no markdown, no extra text:
+                {{"current_state": "question or no_question", "ai_response": "your message here"}}
+            """
         prompt = ChatPromptTemplate.from_template(template)
         retrieval_chain = (
         {"user_message": lambda x: state.user_message, "history": lambda x: state.history, "username": RunnablePassthrough()}
@@ -136,9 +144,10 @@ def preamble_node(state: mainState) -> mainState:
         | StrOutputParser()
         )
         response = retrieval_chain.invoke(state.username)
-        response_sanitised = re.sub(r"```json\s*|\s*```", "", response.strip())
 
-        print("--------", response_sanitised)
+        print("-----preamble_response", response)
+
+        response_sanitised = re.sub(r"```json\s*|\s*```", "", response.strip())
 
         try:
             data = json.loads(response_sanitised)
@@ -293,7 +302,7 @@ def question_generator(state: mainState) -> mainState:
             "selected_doc": selected_doc
         })
 
-        print("question generator response***************", result)
+        print("-------que_generator response", result)
         
         response_sanitised = re.sub(r"```json\s*|\s*```", "", result.strip())
         response_sanitised = response_sanitised.replace('"', '"').replace('"', '"').replace("'", "'").replace("'", "'")
@@ -347,22 +356,18 @@ def assessor(state: mainState) -> mainState:
     print("--------danzo  state value....", state.target_skill)
     try:
         template = """
-            You are a warm, patient English tutor having a real conversation with a student. 
-            You genuinely care about their progress and speak naturally, not like a marking machine.
-            You assess a student's response and guide them with a teaching philosophy 
-            that centers on clear, Socratic questioning, scaffolding to achieve the Zone of Proximal Development. 
-            You do not give the student the direct answer but guide them to get it on their own through conversation.
+            You are a friendly Grade 12 English tutor assessing a student's answer.
 
             context:
                 Student's name: {username}
+                Question: {question}
                 Student's answer: {user_message}
-                Question asked: {question}
-                Number of attempts made by the student: {attempts}
-                Conversation history: {history}
+                Attempt number: {attempts}
+                Chat history: {history}
 
-            instructions:
-                1. Look at the student's  answer and READ the conversation history and notice any patterns between the answer and conversation history
-                   not to lecture the student, but to connect the dots naturally in conversation. For example, instead of 
+            Instructions:
+            1. Look at the student's  answer and READ the conversation history and notice any patterns between the answer and conversation history.
+               Your goal is to point out the recurring mistakes and include the in your response in a nice manner For example, instead of 
                 "I notice you have a recurring weakness in inference", say something like 
                 "You know, I'm seeing something similar to what came up earlier - you're picking 
                 up the surface detail but the deeper meaning is slipping through."
@@ -373,49 +378,29 @@ def assessor(state: mainState) -> mainState:
                     - Missing key points in summaries
                     - Misunderstanding vocabulary in context
 
+            2. Decide if the student's answer is correct, partially correct, or wrong.
+                Then respond warmly and naturally, like a real person, not a marking machine.
 
-                2. RESPOND like a real tutor would in a one-on-one session:
-                - Acknowledge what they said first before evaluating it
-                - If they're on the right track, say so genuinely before pointing out what's missing
-                - If they're off track, don't just say "wrong" - respond to the specific thing 
-                    they said and redirect naturally
-                - Use the student's name occasionally to keep it personal
+            3. MARKING GUIDE (out of 3):
+                - 3 marks: Answer covers the main point(s) clearly, even if not perfectly worded
+                - 1 mark: Answer is on the right track but missing key detail
+                - 0 marks: Answer is off topic or completely wrong
 
-                3. If it is the student's first, second, third or fourth attempt:
-                - Mark the answer out of 3:
-                    * 3 marks: fully correct
-                    * 1 mark: partially correct  
-                    * 0 marks: completely wrong
-                - If correct: state feedback as "correct" and affirm them.
-                - If partially correct or wrong: state feedback as "wrong", encourage them 
-                    to try again, and provide a Socratic hints without giving the answer away.
-                - If a recurring weakness was identified in step 1, EXPLICITLY mention it.
-                respond ONLY in JSON format {{"feedback": "correct" or "wrong", "mark": <marks_awarded>, "ai_response": "<your response>"}}.
+            4. BE GENEROUS, Grade 12 students do not need to use exact wording from the passage.
+            If they demonstrate understanding of the concept, that is correct.
 
+            5. RULES:
+                - If mark is 2 or 3: feedback = "correct"
+                - If mark is 0 or 1: feedback = "wrong"
+                - On attempt 5 (final): feedback = "correct" regardless, walk through the answer kindly
+                - DO NOT quote the passage back to the student
+                - DO NOT repeat your previous responses from history
+                - DO NOT give away the answer directly on attempts 1-4
+                - Keep response to 2-3 sentences MAXIMUM
+                - Use the student's name once
 
-                4. HINTS should feel like conversation, not clues in a game:
-                - Bad: "Think about what the author implies rather than states explicitly."
-                - Good: "Okay so you've picked up that the farmer uses compost - good. 
-                    But why do you think the passage mentions animals roaming freely right 
-                    after that? What's the connection the writer is making?"
-
-                5. ATTEMPT 5 (final attempt): 
-                - Be honest but kind - "Okay, let me show you how I'd approach this..."
-                - Walk through the reasoning like you're thinking aloud together
-                - End with something forward-looking: "Now that you've seen how that works, 
-                    watch out for this pattern in the next one."
-
-                6. GRAMMAR: If you spot grammar issues in their response, weave the correction 
-                naturally into your reply rather than listing it separately. 
-                For example: "I like what you're going for - and just a small thing, 
-                it would be 'allows the environment to recover' not 'allow'."
-
-                7. Keep responses SHORT - 3 to 5 sentences max. You're having a conversation, 
-                not writing a report.
-
-                Respond ONLY in JSON format:
-                {{"feedback": "correct" or "wrong", "mark": <number or null>, "ai_response": ""}}
-                REMEMBER DO NOT  GIVE OUT THE ANSWERS  BUT GUIDE THE STUDENT TO GET IT ON THEIR OWN THROUGH CONVERSATION.
+            RESPOND ONLY as valid JSON, nothing before or after it:
+            {{"feedback": "correct" or "wrong", "mark": <marks_awarded>, "ai_response": "<your response>"}}
         """
         prompt = ChatPromptTemplate.from_template(template)
         retrieval_chain = (
@@ -431,7 +416,12 @@ def assessor(state: mainState) -> mainState:
             | StrOutputParser()
         )
         response = retrieval_chain.invoke(state.username)
+        print("-------actual assessor response", response)
+        
+        #sanitising output
         response_sanitised = re.sub(r"```json\s*|\s*```", "", response.strip())
+        response_sanitised = re.sub(r'[\x00-\x1f\x7f](?<!["\n])', ' ', response_sanitised)  # remove control chars
+        response_sanitised = response_sanitised.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
 
         print("--------question assessor response***************", state.current_question)
         print("--------attempts***************", state.attempts)

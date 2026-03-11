@@ -240,6 +240,8 @@ def dashboard_dialogue():
         graph_builder = dashboard_graph()
         result = graph_builder.invoke(state)
 
+        response = result["message"]
+
         print("*****************///////-----------")
         print(result, "-------**/*//*****************************dashboard result")
 
@@ -253,11 +255,11 @@ def dashboard_dialogue():
         if output_moderated_response.flagged:
             return jsonify({"message": default_output_response}), 200
 
-        response = result["message"]
         
-        if user_message.strip():  # Only add user message if it's not empty
+        
+        if user_message.strip() or response.strip():  
             session['dashboard_history'].append({'HumanMessage': user_message})
-        session['dashboard_history'].append({'AIMessage': response})
+            session['dashboard_history'].append({'AIMessage': response})
 
         # Trimming history to prevent session overflow (keeping it at last 20 messages)
         if len(session['dashboard_history']) > 20:
@@ -268,13 +270,9 @@ def dashboard_dialogue():
 
         print(f"RESPONSE: New history length={len(session['dashboard_history'])}")
 
-        """return jsonify({
+        return jsonify({
             'message': response,
             'dialogue': session['dashboard_history']  #Return history to frontend
-        }), 200"""
-
-        return jsonify({
-            'message': response
         }), 200
         
     except Exception as e:
@@ -342,11 +340,15 @@ def tutoring():
             print("WARNING: ai_response is None or invalid, cannot continue")
             return jsonify({'message': 'The tutor could not generate a response, please try again.'}), 200
 
-        # In main.py around line 293, replace the session updates with:
+        # Update session variables from the tutoring graph
+        session['tutoring_history'].append({'HumanMessage': user_message})
+        session['tutoring_history'].append({'AIMessage': response})
         session['attempts'] = result.get('attempts', 0) if result.get('attempts', 0) < 5 else 0
         session['current_state'] = result.get('current_state') if result.get('current_state') is not None else session['current_state']
         session['question'] = result.get('current_question') if result.get('current_question') is not None else session.get('question', '')
         session['target_skill'] = result.get('target_skill') if result.get('target_skill') is not None else session.get('target_skill', '')
+        
+        #Output moderation check
         session.modified = True
         output_moderation = client.moderations.create(
             model="omni-moderation-latest",
@@ -394,4 +396,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(app.run(debug=True, use_reloader=False))
