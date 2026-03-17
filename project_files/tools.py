@@ -22,24 +22,32 @@ from dotenv import load_dotenv
 import os
 import random
 
+######### Initialsing embeddings, data handlers
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=768)
 skill_components = retrieveData()
 progress = retrieveData()
 
+############# Initialising  LLMs. We are using primarily Anthropic but for debugging we swith to other providers for now they are commented out.
 load_dotenv()
-"""O_api_key = os.getenv("OPENAI_API_KEY")
+""" 
+# Initialize the OpenAI LLM
 
-# Initialize the LLM
+O_api_key = os.getenv("OPENAI_API_KEY")
+
 llm = ChatOpenAI(
     model="gpt-5-2025-08-07",  # you can replace with "gpt-4" or others
     api_key=O_api_key,
     temperature=1
 )"""
 
-"""google_gen_ai = os.getenv('GOOGLE_API_KEY')
+"""
+# Initialize the OpenAI LLM
+
+google_gen_ai = os.getenv('GOOGLE_API_KEY')
+
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-lite", api_key=google_gen_ai)
 """
-# Load Claude API key from environment variable
+# # Initialising the OpenAI LLM, first Load Claude API key from environment variable
 A_api_key = os.getenv("ANTHROPIC_API_KEY")
 
 # Initialize Claude (Sonnet in this case)
@@ -49,12 +57,13 @@ llm = ChatAnthropic(
     api_key=A_api_key
 )
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small", dimensions=768)
-
 ##################################################################
 ############  graph for tutoring
 ##################################################################
 def ocherstrator_node(state: mainState) -> mainState:
+    """This function serves as an entry point to the graph, 
+    it also summarises the chat history every 20 interactions to keep the context window manageable"""
+
     print("-------ocherstrator node")
     if len(state.history) > 20:
         summary_list = list(state.history.items())
@@ -82,8 +91,8 @@ def ocherstrator_node(state: mainState) -> mainState:
     return state 
 
 def ocherstrator_edge(state: mainState) -> mainState:
-    print("the current state is **/")
     """This function routes to the correct pathway for handling a task delegation"""
+
     if state.current_state == "preamble" or state.current_state == "no_question":
         print("Routing to preamble...")
         return "preamble"
@@ -98,7 +107,7 @@ def ocherstrator_edge(state: mainState) -> mainState:
         return "dialogue_manager" 
     
 def preamble_node(state: mainState) -> mainState:
-    """This function serves to introduce the student when the tutoring session which is just starting"""
+    """This function serves to introduce the student when the tutoring session is just starting"""
     print("------------preamble node")
 
     try:
@@ -113,8 +122,8 @@ def preamble_node(state: mainState) -> mainState:
                 instructions:    
 
                 1: Read the chat history carefully:
-                    - Is the history empty? → This is the first message, greet the student.
-                    - Does the history show a greeting already happened? → DO NOT greet again. 
+                    - Is the history empty? This is the first message, greet the student.
+                    - Does the history show a greeting already happened? DO NOT greet again. 
                     Respond to what the student just said.
 
                 2: Determine current_state:
@@ -168,6 +177,7 @@ def preamble_node(state: mainState) -> mainState:
 def general_node(state: mainState) -> mainState:
     """This function serves to manage chat which has went off topic, these are messages from the student 
        which do not necessarily answer the question posed by the tutor"""
+    
     print("----------------general_node")
     try:
         template = """
@@ -198,6 +208,7 @@ def general_node(state: mainState) -> mainState:
 
 def question_generator(state: mainState) -> mainState:
     """This funtion generates questions"""
+
     print("Question generator node.........")
     ranges = {'first': [],'second': [],'third': [],'fourth': [],'fifth': []}
 
@@ -243,6 +254,8 @@ def question_generator(state: mainState) -> mainState:
                 target_comp = components[random.randint(0, len(components)-1)]
                 break
     
+    #This part serves to randomise the query we send to the vector database for retrieval, this is to ensure we get a variety of questions 
+
     comprehending_text = ["comprehending text", "understanding explicit information", "making inferences", "identifying main ideas and supporting details", "understanding purpose and context"]
     vocabulary = ["vocabulary", "understanding word meanings", "using context clues", "understanding figurative language", "understanding word relationships"]
     summarisation = ["summarization", "identifying key points", "producing summaries in own words"]  
@@ -255,12 +268,13 @@ def question_generator(state: mainState) -> mainState:
         query = random.choice(summarisation)
     state.target_skill = target_comp
 
+    #Retrieval of tutoring material from the vector store
     vectorstore = PineconeVectorStore(index_name="past-papers-index", embedding=embeddings)
 
     retrieved_docs = vectorstore.similarity_search(query, k=5)
 
     weights = [0.40, 0.25, 0.18, 0.10, 0.07]  
-    selected_doc = random.choices(retrieved_docs, weights=weights[:len(retrieved_docs)], k=1)[0]
+    selected_doc = random.choices(retrieved_docs, weights=weights[:len(retrieved_docs)], k=1)[0] #randomly select a document making use of weights assignements 
 
     try:
         template = """
@@ -352,6 +366,7 @@ def question_generator(state: mainState) -> mainState:
         return state
 
 def assessor(state: mainState) -> mainState:
+    """This function assesses the students response to a question"""
     print("Assessor node.........")
     print("--------danzo  state value....", state.target_skill)
     try:
@@ -446,7 +461,7 @@ def assessor(state: mainState) -> mainState:
                     mastery_estimate = knowledgeStateData.get(state.target_skill, 0)
                     expected_value = 1 / (1 + math.exp(-mastery_estimate))
                     
-                    new_value = mastery_estimate + (feedback_state - expected_value) * 0.1
+                    new_value = mastery_estimate + (feedback_state - expected_value) * 3
                     knowledgeStateData[state.target_skill] = new_value
                     skill_components.update_skill_components(session['user_id'], knowledgeStateData)
                     
