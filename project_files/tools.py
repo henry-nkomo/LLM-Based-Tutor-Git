@@ -66,7 +66,7 @@ def ocherstrator_node(state: mainState) -> mainState:
 
     print("-------ocherstrator node")
     if len(state.history) > 20:
-        summary_list = list(state.history.items())
+        summary_list = state.history
         new_summary_list = summary_list[20:30]
 
         try:
@@ -376,54 +376,47 @@ def assessor(state: mainState) -> mainState:
             context:
                 Student's name: {username}
                 Question: {question}
-                Student's answer: {user_message}
-                Attempt number: {attempts}
+                Student's response: {user_message}
                 Chat history: {history}
 
             Instructions:
-            1. Look at the student's  answer and READ the conversation history and notice any patterns between the answer and conversation history.
-               Your goal is to point out the recurring mistakes and include the in your response in a nice manner For example, instead of 
-                "I notice you have a recurring weakness in inference", say something like 
-                "You know, I'm seeing something similar to what came up earlier - you're picking 
-                up the surface detail but the deeper meaning is slipping through."
-                Recurring mistakes or weaknesses the student has shown across multiple questions, might include:
-                    - Repeatedly missing implicit meaning or inference
-                    - Consistently poor grammar or sentence structure  
-                    - Struggling to use their own words (copying verbatim)
-                    - Missing key points in summaries
-                    - Misunderstanding vocabulary in context
+            1. Read the student's response and assess it against the question:
+               * If the answer is relavant to the question asked, proceed to consder and mark it as per second instruction.
+               * If the answer is completely off topic (e.g. about unrelated things) respond directly but kindly and redirect them
+            
+            2. MARKING GUIDE (out of 3):
+                - 3 marks: Covers the main point(s) clearly, even if not perfectly worded
+                - 1 mark: On the right track but missing key detail  
+                - 0 marks: Off topic or completely wrong
 
-            2. Decide if the student's answer is correct, partially correct, or wrong.
-                Then respond warmly and naturally, like a real person, not a marking machine.
-
-            3. MARKING GUIDE (out of 3):
-                - 3 marks: Answer covers the main point(s) clearly, even if not perfectly worded
-                - 1 mark: Answer is on the right track but missing key detail
-                - 0 marks: Answer is off topic or completely wrong
-
-            4. BE GENEROUS, Grade 12 students do not need to use exact wording from the passage.
-            If they demonstrate understanding of the concept, that is correct.
+            3. BE GENEROUS - if they demonstrate understanding of the concept, that is correct.
+            
+            2. Also check previous chat history to:
+            - Avoid repeating what you already said
+            - Notice if the student keeps making the same mistake
+            - If they keep repeating wrong answers, gently name the specific pattern
+                e.g. "I notice you keep focusing on who the people are rather than what they do"
+                NOT generic statements like "you're still struggling"
 
             5. RULES:
                 - If mark is 2 or 3: feedback = "correct"
                 - If mark is 0 or 1: feedback = "wrong"
-                - On attempt 5 (final): feedback = "correct" regardless, walk through the answer kindly
                 - DO NOT quote the passage back to the student
-                - DO NOT repeat your previous responses from history
-                - DO NOT give away the answer directly on attempts 1-4
+                - DO NOT give away the answer directly
                 - Keep response to 2-3 sentences MAXIMUM
-                - Use the student's name once
+                - If the answer is completely off topic (e.g. about unrelated things), 
+                say so directly but kindly and redirect them
 
-            RESPOND ONLY as valid JSON, nothing before or after it:
+            RESPOND ONLY as valid JSON:
             {{"feedback": "correct" or "wrong", "mark": <marks_awarded>, "ai_response": "<your response>"}}
         """
         prompt = ChatPromptTemplate.from_template(template)
+
         retrieval_chain = (
             {
                 "user_message": lambda x: state.user_message,
                 "question": lambda x: state.current_question,
-                "attempts": lambda x: state.attempts,
-                "history": lambda x: state.history,    
+                "history": lambda x: state.history,
                 "username": RunnablePassthrough()
             }
             | prompt
@@ -435,7 +428,7 @@ def assessor(state: mainState) -> mainState:
         
         #sanitising output
         response_sanitised = re.sub(r"```json\s*|\s*```", "", response.strip())
-        response_sanitised = re.sub(r'[\x00-\x1f\x7f](?<!["\n])', ' ', response_sanitised)  # remove control chars
+        response_sanitised = re.sub(r'[\x00-\x1f\x7f](?<!["\n])', ' ', response_sanitised)
         response_sanitised = response_sanitised.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
 
         print("--------question assessor response***************", state.current_question)
@@ -474,8 +467,11 @@ def assessor(state: mainState) -> mainState:
             elif state.feedback == "wrong":
                 print("-------attempts before increment", state.attempts)
                 state.attempts += 1
+                if state.attempts >= 3:  # max attempts reached
+                    state.current_state = "reveal_answer"  
+                else:
+                    state.current_state = "assessment"
                 print("-------attempts after increment", state.attempts)
-                state.current_state = "assessment"
             else:
                 # Safety: if feedback is neither correct nor wrong, something went wrong
                 print(f"ERROR: Unexpected feedback value: {state.feedback}")
@@ -491,24 +487,66 @@ def assessor(state: mainState) -> mainState:
         state.ai_response = "Exhausted resources for the day try again after 24 hours"
         return state
     
-def assessor_edge(state: mainState) ->mainState:
-    """This function routes to the correct pathway after the assessor node"""
+def assessor_edge(state: mainState) -> str:
     if state.feedback == "correct":
         state.current_state = "question"
         return "question_generator"
+    elif state.current_state == "reveal_answer":
+        return "reveal_answer"
     else:
         state.current_state = "assessment"
-        return "assessor"
+        return END
+    
+def reveal_answer_node(state: mainState) -> mainState:
+    """Reveals the correct answer after max attempts then moves on"""
+    print("-------reveal answer node")
+    try:
+        template = """
+            You are a friendly Grade 12 English tutor.
+
+            context:
+                Student's name: {username}
+                Question: {question}
+                Chat history: {attempts_history}
+
+            instructions:
+                1. The student has used all their attempts on this question.
+                2. Kindly and warmly walk through the correct answer.
+                3. Point out what the student was getting right (if anything).
+                4. Explain what the complete answer should have included.
+                5. End with an encouraging sentence before moving on.
+                6. Keep response to 3-4 sentences MAX.
+                7. Do NOT make the student feel bad.
+        """
+        prompt = ChatPromptTemplate.from_template(template)
+        retrieval_chain = (
+            {
+                "question": lambda x: state.current_question,
+                "attempts_history": lambda x: state.history,
+                "username": RunnablePassthrough()
+            }
+            | prompt
+            | llm
+            | StrOutputParser()
+        )
+        response = retrieval_chain.invoke(state.username)
+        state.ai_response = response
+        state.current_state = "question"  # move to next question after this
+        state.attempts = 0               # reset attempts
+        return state
+
+    except ResourceExhausted as e:
+        state.ai_response = "An error occurred."
+        return state
          
 def tutor_graph():
-    """This function compiles and returns the tutoring graph"""
-
     graph = StateGraph(mainState)
     graph.add_node("start", ocherstrator_node)
     graph.add_node("question_generator", question_generator)
     graph.add_node("assessor", assessor)
     graph.add_node("preamble", preamble_node)
     graph.add_node("general_manager", general_node)
+    graph.add_node("reveal_answer", reveal_answer_node)  
 
     graph.set_entry_point("start")
 
@@ -528,15 +566,16 @@ def tutor_graph():
         assessor_edge,
         {
             "question_generator": "question_generator",
-            "assessor": END
+            "reveal_answer": "reveal_answer",  
+            END: END
         }
     )
 
+    graph.add_edge("reveal_answer", END)  
     graph.add_edge("question_generator", END)
     graph.add_edge("preamble", END)
     graph.add_edge("general_manager", END)
     return graph.compile()
-
 
 
 @tool
@@ -634,18 +673,19 @@ def manage_dashboard_chat(
                 Is student returning to dashboard: {is_returning}
 
             instructions:
-                1. If the student is RETURNING (empty message, just loaded page):
-                   - Welcome them back warmly
-                   - Briefly remind them of what you discussed before
-                   - Encourage them to continue studying on the study page
+                1: Look at the chat history and check whether you have infomed the student about the platform which is:
+                    * The platform has a study page where they can practice English comprehension
+                    * The platform provides natural language interaction, they can freely ask questions and get assistance from the tutor
+                    * Provide a summary report which is a weakness report that gives them insights into which skill components they are struggling with and how to improve.
+                2. If you have not informed the  student do this:
+                   * Welcome the user to the platform warmly
+                   * mention that the platform has a study page where they can practice English comprehension
+                   * mention that the platform provides natural language interaction, they can freely ask questions and get assistance from the tutor
+                   * Provide a summary report which is a weakness report that gives them insights into which skill components they are struggling with and how to improve.
+                   * Encourage them to continue studying on the study page
                    
-                2. If the student sent an ACTUAL MESSAGE:
-                   - Look at the chat history to see if you've already:
-                     * Explained the platform features (study page, natural language interaction)
-                     * Provided their weakness report based on summary
-                     * Given advice on improving using the platform
-                   - If you haven't done the above, do it now in a concise way (2-3 sentences)
-                   - Then respond to their current message and encourage them to study
+                2. If you had informed the student do this:
+                   - respond to their current message and coerce them to goo to the study page to study
                    
                 3. Keep responses short and encouraging (2-4 sentences max)
         """

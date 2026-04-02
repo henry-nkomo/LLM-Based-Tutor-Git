@@ -7,15 +7,30 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('User data found:', result); //for debugging
             let firstLetter = result.username.charAt(0).toUpperCase();
 
-            document.getElementById('username').textContent = `${result.username}`;
+            document.getElementById('username').textContent = result.username;
+            document.getElementById('second_username').textContent = result.username;
+            document.getElementById('profile-card').textContent = firstLetter;
+            document.getElementById('name-input').value = result.username;
+            document.getElementById('email-input').value = result.user_email;
+
+            /*document.getElementById('username').textContent = `${result.username}`;
             document.getElementById('second_username').textContent = `${result.username}`;
             document.getElementById('profile-card').textContent = `${firstLetter}`;;
             document.getElementById('name-input').value = result.username;
             document.getElementById('email-input').value = result.user_email;
-            document.getElementById('lessons').textContent = `${result.l_completed}`;
-            document.getElementById('compre').textContent = `${result.c_mark}%`;
-            document.getElementById('summa').textContent = `${result.s_mark}%`;
+            document.getElementById('vocabulary').textContent = `${result.l_completed}`;
+            document.getElementById('summarisation').textContent = `${result.c_mark}%`;
+            document.getElementById('comprehending-text').textContent = `${result.s_mark}%`;*/
         }
+
+        if (result.knowledge_state) {
+                document.getElementById('vocabulary').textContent = 
+                    `${Math.round(result.knowledge_state['vocabulary'])}%`;
+                document.getElementById('summarisation').textContent = 
+                    `${Math.round(result.knowledge_state['summarisation'])}%`;
+                document.getElementById('comprehending-text').textContent = 
+                    `${Math.round(result.knowledge_state['comprehending-text'])}%`;
+            }
     } catch (error) {
         console.log('No user data found', error);
     }

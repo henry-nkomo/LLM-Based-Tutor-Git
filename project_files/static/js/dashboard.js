@@ -218,7 +218,7 @@ async function welcomeUser() {
 
     try {
         const sum_payload = { 
-            message: ""  // ✅ CHANGED: Empty string instead of "Initiate a conversation, send initial message"
+            message: ""  //  CHANGED: Empty string instead of "Initiate a conversation, send initial message"
         };
 
         const initiateChat = await fetch('/dashboard_dialogue', {
@@ -232,7 +232,11 @@ async function welcomeUser() {
         const data = await initiateChat.json();
         console.log('Response data:', data);
 
-        messagesDiv.innerHTML += `<div class="message bot-message"><strong>Tutor:</strong> ${data.message}</div>`;
+        if (data.dialogue  && data.message) {
+            fillChatArea(data.dialogue);
+            messagesDiv.innerHTML += `<div class="message bot-message"><strong>Tutor:</strong> ${data.message}</div>`;
+        }
+
         if (data.dialogue) {
             fillChatArea(data.dialogue);
         }
@@ -297,6 +301,8 @@ document.getElementById('study-btn').addEventListener('click', function() {
     window.location.href = '/study';
 });
 
+
+
 // Initialize everything on page load
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -326,3 +332,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+

@@ -60,12 +60,24 @@ const typingIndicator = document.getElementById('typingIndicator');
 let messageCount = 0;
 
 // Fill chat area on page load
-function fillChatArea(previous_dialogue) {
+/*function fillChatArea(previous_dialogue) {
     console.log('Previous dialogue length:', previous_dialogue.length);
     if (previous_dialogue.length <= 2) return;
 
     chatMessages.innerHTML = "";
 
+    previous_dialogue.forEach(message => {
+        const [role, content] = Object.entries(message)[0];
+        const sender = role === 'HumanMessage' ? 'student' : 'tutor';
+        addMessage(content, sender, false);
+    });
+}*/
+
+function fillChatArea(previous_dialogue) {
+    if (!previous_dialogue || previous_dialogue.length === 0) return;
+
+    chatMessages.innerHTML = "";
+    messageCount = 0; // tried reseting the counter to prevent the "No messages yet" from showing up, but it doesn't work - need to debug
     previous_dialogue.forEach(message => {
         const [role, content] = Object.entries(message)[0];
         const sender = role === 'HumanMessage' ? 'student' : 'tutor';
@@ -93,7 +105,7 @@ chatInput.addEventListener('keypress', function(e) {
 sendBtn.addEventListener('click', compDialogue);
 
 // Initial welcome message
-async function compWelcomeUser() {
+/*async function compWelcomeUser() {
     try {
         showTypingIndicator();
 
@@ -117,6 +129,41 @@ async function compWelcomeUser() {
 
         if (data.dialogue) {
             fillChatArea(data.dialogue);
+        }
+
+    } catch (error) {
+        console.log('Could not initiate dialogue:', error);
+        hideTypingIndicator();
+    }
+}*/
+
+async function compWelcomeUser() {
+    try {
+        showTypingIndicator();
+
+        const comp_payload = { 
+            message: "Initiate a conversation, send initial message"
+        };
+
+        const initiateChat = await fetch('/tutoring', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(comp_payload),
+        });
+
+        const data = await initiateChat.json();
+        console.log('Response data:', data);
+        hideTypingIndicator();
+
+        // consider these two scenarios #scenario 1: user refreshes page during an active session - in this case, we want to fill the chat area with the previous dialogue and not add a duplicate opening message
+        if (data.dialogue && data.dialogue.length > 0) {
+            fillChatArea(data.dialogue);
+            return; // stop here, don't add a duplicate message
+        }
+
+        // scenario 2: user starts a new session or there is no previous dialogue - in this case, we want to add the opening message from the tutor
+        if (data.message) {
+            addMessage(data.message, 'tutor');
         }
 
     } catch (error) {

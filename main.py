@@ -116,6 +116,7 @@ def login():
         session.permanent = True  # Enable permanent session
         session['user_id'] = user_object.id
         session['username'] = user_object.name
+        session['email'] = user_object.email
         session['dash_history'] = []
         session['tutoring_history'] = []
         session['dashboard_history'] = []
@@ -192,6 +193,7 @@ def check_session():
         return jsonify({
             'authenticated': True,
             'username': session.get('username'),
+            'user_email': session.get('email'),
             'knowledge_state': skill_components_data  
         })
     else:
@@ -205,6 +207,16 @@ def dashboard_dialogue():
     try:
         data = request.get_json()
         user_message = data.get('message', '')  # Default to empty string
+
+        #Initialize dashboard_history if it doesn't exist
+        if 'dashboard_history' not in session:
+            session['dashboard_history'] = []
+
+        if user_message == "" and len(session['dashboard_history']) >= 2:
+             return jsonify({
+                'dialogue': session['dashboard_history']  #Return history to frontend
+             }), 200
+        
 
         default_input_response = "A message sent to the tutor has been flagged unsafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
         default_output_response = "A message from the tutor been flagged as unsafe and cannot be processed. Please resend you previous message to continue the tutoring session."
@@ -221,9 +233,6 @@ def dashboard_dialogue():
         if input_moderated_response.flagged:
             return jsonify({"message": default_input_response}), 200
 
-        #Initialize dashboard_history if it doesn't exist
-        if 'dashboard_history' not in session:
-            session['dashboard_history'] = []
 
         #Get existing history
         dashboard_history = session.get('dashboard_history', [])
@@ -256,7 +265,6 @@ def dashboard_dialogue():
             return jsonify({"message": default_output_response}), 200
 
         
-        
         if user_message.strip() or response.strip():  
             session['dashboard_history'].append({'HumanMessage': user_message})
             session['dashboard_history'].append({'AIMessage': response})
@@ -286,6 +294,15 @@ def tutoring():
     try:
         data = request.get_json()
         user_message = data.get('message')
+
+        #Initialize tutoring_history if it doesn't exist
+        if 'tutoring_history' not in session:
+            session['tutoring_history'] = []
+
+        if user_message == "Initiate a conversation, send initial message" and len(session['tutoring_history']) >= 2:
+             return jsonify({
+                'dialogue': session['tutoring_history']  #Return history to frontend
+             }), 200
 
         default_input_response = "A message sent to the tutor has been flagged unsafe and cannot be processed. Please ensure that any message sent does elicit or include harmful content spanning harassment, hate speech, illicit activities, self-harm, sexual content or violence "
         default_output_response = "A message from the tutor been flagged as unsafe and cannot be processed. Please resend you previous message to continue the tutoring session."
@@ -343,10 +360,17 @@ def tutoring():
         # Update session variables from the tutoring graph
         session['tutoring_history'].append({'HumanMessage': user_message})
         session['tutoring_history'].append({'AIMessage': response})
-        session['attempts'] = result.get('attempts', 0) if result.get('attempts', 0) < 5 else 0
         session['current_state'] = result.get('current_state') if result.get('current_state') is not None else session['current_state']
         session['question'] = result.get('current_question') if result.get('current_question') is not None else session.get('question', '')
         session['target_skill'] = result.get('target_skill') if result.get('target_skill') is not None else session.get('target_skill', '')
+
+        attempts = result.get('attempts', 0)
+        if attempts >= 3:
+            session['attempts'] = 0
+            session['current_state'] = 'question'  
+            session['current_question'] = ''
+        else:
+            session['attempts'] = attempts
         
         #Output moderation check
         session.modified = True
@@ -396,4 +420,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(app.run(debug=True, use_reloader=False))
+    app.run(debug=True, use_reloader=False)
